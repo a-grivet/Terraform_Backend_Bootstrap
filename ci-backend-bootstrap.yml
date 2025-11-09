@@ -1,0 +1,94 @@
+name: ci
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+  # Lancement manuel pour 'apply'
+  workflow_dispatch:
+
+permissions:
+  id-token: write        # requis pour OIDC
+  contents: read
+
+jobs:
+  validate_plan:
+    name: Validate & Plan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform fmt (check)
+        run: terraform fmt -check -recursive
+
+      # Pour le bootstrap on init en local (pas de backend distant tant qu'il n'existe pas)
+      - name: Terraform init (local)
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      # On configure des *credentials temporaires* via OIDC -> rôle IAM
+      - name: Configure AWS (OIDC) for PLAN
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region:     ${{ vars.AWS_REGION }}
+
+      # Variables Terraform passées via TF_VAR_*
+      - name: Terraform Plan
+        env:
+          TF_VAR_region:                      ${{ vars.AWS_REGION }}
+          TF_VAR_bucket_name:                 ${{ vars.TF_BUCKET_NAME }}
+          TF_VAR_lock_table_name:             ${{ vars.TF_LOCK_TABLE_NAME }}
+          TF_VAR_create_lock_table:           ${{ vars.TF_CREATE_LOCK_TABLE || 'true' }}
+          # Optionnels si définis : KMS et lifecycle
+          TF_VAR_kms_key_arn:                 ${{ vars.TF_KMS_KEY_ARN }}
+          TF_VAR_noncurrent_version_expiration_days: ${{ vars.TF_NONCURRENT_EXPIRATION || '90' }}
+        run: |
+          terraform plan \
+            -input=false \
+            -no-color
+
+  apply:
+    name: Apply (protected)
+    runs-on: ubuntu-latest
+    needs: validate_plan
+    if: github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform init (local for bootstrap)
+        run: terraform init -input=false
+
+      - name: Configure AWS (OIDC) for APPLY
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region:     ${{ vars.AWS_REGION }}
+
+      - name: Terraform Apply
+        env:
+          TF_VAR_region:                      ${{ vars.AWS_REGION }}
+          TF_VAR_bucket_name:                 ${{ vars.TF_BUCKET_NAME }}
+          TF_VAR_lock_table_name:             ${{ vars.TF_LOCK_TABLE_NAME }}
+          TF_VAR_create_lock_table:           ${{ vars.TF_CREATE_LOCK_TABLE || 'true' }}
+          TF_VAR_kms_key_arn:                 ${{ vars.TF_KMS_KEY_ARN }}
+          TF_VAR_noncurrent_version_expiration_days: ${{ vars.TF_NONCURRENT_EXPIRATION || '90' }}
+        run: |
+          terraform apply -auto-approve -input=false -no-color
