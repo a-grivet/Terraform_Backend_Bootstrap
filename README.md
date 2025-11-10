@@ -1,12 +1,7 @@
 # Terraform Backend Bootstrap (S3 + DynamoDB)
 
-![Terraform](https://img.shields.io/badge/Terraform-v1.7%2B-623CE4?logo=terraform)
-![Cloud](https://img.shields.io/badge/Cloud-AWS-orange?logo=amazonaws)
-![CI Status](https://img.shields.io/static/v1?label=CI&message=passing&color=3fb950&style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-
 ![Terraform](https://img.shields.io/badge/Terraform-v1.7+-7B42BC?style=flat-square&logo=terraform)
-![Cloud](https://img.shields.io/badge/Cloud-AWS-F7931E?style=flat-square&logo=amazonaws&logoColor=white)
+![Cloud](https://img.shields.io/badge/Cloud-AWS-orange?logo=amazonaws)
 ![CI Status](https://img.shields.io/static/v1?label=CI&message=passing&color=3fb950&style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
 
