@@ -3,6 +3,7 @@
 ![Terraform](https://img.shields.io/badge/Terraform-v1.7%2B-623CE4?logo=terraform)
 ![Cloud](https://img.shields.io/badge/Cloud-AWS-orange?logo=amazonaws)
 ![CI Build](https://github.com/a-grivet/Terraform_Backend_Bootstrap/actions/workflows/ci-backend-bootstrap.yml/badge.svg)
+![CI Build](https://github.com/a-grivet/Terraform_Backend_Bootstrap/blob/750d3015783c78d8fd505b7537049a04e0144cb1/.github/workflows/ci-backend-bootstrap.yml)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 This module provisions the **infrastructure foundation** required to host the **remote Terraform state** (`remote backend`)
